@@ -444,7 +444,7 @@ We will create a function called ```save_data()``` that can be called from the `
 
 One important thing to note here is the way I save the pandas data frame to the csv file: For efficiency purposes, it is better to append the data to any existing data (as opposed to just overwriting the file each time).
 
-I also overwrite the ```DATA``` variable (by setting it equal to None) after each time I save it to the file. This is another way to improve efficiency if you are scraping a potentially large data set--that way Python won't waste computer resources by concatenating data to a potentially large ```DATA``` variable that's already saved to an external data file. 
+I also overwrite the ```DATA``` variable (by setting it equal to an empty data frame--```pd.DataFrame()```) after each time I save it to the file. This is another way to improve efficiency if you are scraping a potentially large data set--that way Python won't waste computer resources by concatenating data to a potentially large ```DATA``` variable that's already saved to an external data file. 
 
 ```
 DATA = pd.DataFrame()
@@ -458,17 +458,17 @@ def save_data(data, save=False):
     if save:
         #Clean the data before saving it to the file
         DATA["Officer"] = DATA["Citation"].apply(lambda x: re.search(r'P(\d)', x).group(1))
-        DATA["Fine"] = DATA["Fine"].apply(lambda x: float(x.replace('$', '').replace(',', '')))
+        DATA["Fine"] = DATA["Fine"].apply(lambda x: float(x.replace('$', '').replace(',', '')) if isinstance(x, str) else x)
         DATA["Residence"] = DATA["License Plate/Vin"].str.split().str[0]
-        DATA["IssuedDate"]=pd.to_datetime(DATA["Issued"]).dt.strftime('%Y-%m-%d')
-        DATA["IssuedTime"]=pd.to_datetime(DATA["Issued"]).dt.strftime('%I:%M %p')
+        DATA["IssuedDate"] = pd.to_datetime(DATA["Issued"], format='%b %d, %Y %I:%M %p').dt.strftime('%Y-%m-%d')
+        DATA["IssuedTime"] = pd.to_datetime(DATA["Issued"], format='%b %d, %Y %I:%M %p').dt.strftime('%I:%M %p')
         
         if os.path.exists("ParkingCitations.csv"):
             DATA.to_csv("ParkingCitations.csv", mode='a', index=False, header=False)
         else:
             DATA.to_csv("ParkingCitations.csv", index=False)
             
-        DATA = None
+        DATA = pd.DataFrame()
 ```
 
 We will then save the ```DATA``` periodically. This can be done really whenever, but I decided a good time to save the data frame is after every time we finish scraping all the possible citation combinations in each officer number.
@@ -642,6 +642,33 @@ Here's the updates that occurred:
 3. ```time_thread.start()``` starts running the 10 second timer as defined in ```measure_time```
 4. The thread is joined (stopped) only after the data has been attempted to be scraped. If the timer reaches 10 seconds before the data is scraped, then ```flag``` will be set to true, the while loop will finish and the iteration will proceed to finish as well.
 5. If ```flag``` is true (meaning that the timer finished before the data could load or be scraped), we need to first and foremost reset the ```flag``` property to false so it can be ready for the next iteration, but then secondly, we can repeat the citation number again to get another attempt at scraping the data.
+
+While this script will run and work well for generally all cases, we can add one more error-catching statement that will ensure we get all citations that aren't able to be loaded:
+
+Adding a ```try-except``` statement to the code above, we have:
+```
+try:
+    self.send_keys({"officer": i, "index": j})
+    
+    #Store the data in the RAM
+    #Save it to a file when it is the last index
+    #i.e. save it to a file when we are done scraping each officer's citations
+    scraped_data = self.get_data()
+    if not scraped_data.empty:
+        save_data(scraped_data, save = j == len(self.index)-1)
+    else:
+        print("No data")
+    self._citation_loaded = True
+except Exception as e:
+    now = datetime.datetime.now()
+    index = "0"*(5-len(str(j)))+str(j)
+    key = f"P{i}-{index}"
+    error_message = f"{now}: {str(e)};\nThere was an error sending the keys or scraping the data: {key}"
+    with open("errors.txt", "a") as f:
+        f.write(error_message + "\n\n")
+```
+
+This will log any citation that is not captured and handled by the ```measure_time``` thread to a text file and then just proceed with the rest of the program. After the program is done scraping, we can come back and look specifically at what citations failed to scrape in the ```errors.txt``` file. If it's neglible, we might not need to run the scraper for those citations left on the margin.
 
 ## Conclusion
 
