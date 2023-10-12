@@ -450,14 +450,15 @@ I also overwrite the ```DATA``` variable (by setting it equal to an empty data f
 DATA = pd.DataFrame()
 def save_data(data, save=False):
     global DATA
-    if DATA.empty:
-        DATA = data
-    else:
-        DATA = pd.concat([DATA, data]).reset_index(drop=True)
-    
+    #Don't add empty data
+    if not data.empty and not data.iloc[-1][['Citation', 'License Plate/Vin', 'Fine', 'Issued', 'CitationText']].isna().all(): 
+        if DATA.empty:
+            DATA = data
+        else:
+            DATA = pd.concat([DATA, data]).reset_index(drop=True)
     if save:
         #Clean the data before saving it to the file
-        DATA["Officer"] = DATA["Citation"].apply(lambda x: re.search(r'P(\d)', x).group(1))
+        DATA["Officer"] = DATA["Citation"].apply(lambda x: re.search(r'P(\d+)', str(x)).group(1) if isinstance(x, str) and re.search(r'P(\d+)', str(x)) else None)
         DATA["Fine"] = DATA["Fine"].apply(lambda x: float(x.replace('$', '').replace(',', '')) if isinstance(x, str) else x)
         DATA["Residence"] = DATA["License Plate/Vin"].str.split().str[0]
         DATA["IssuedDate"] = pd.to_datetime(DATA["Issued"], format='%b %d, %Y %I:%M %p').dt.strftime('%Y-%m-%d')
@@ -471,7 +472,7 @@ def save_data(data, save=False):
         DATA = pd.DataFrame()
 ```
 
-We will then save the ```DATA``` periodically. This can be done really whenever, but I decided a good time to save the data frame is after every time we finish scraping all the possible citation combinations in each officer number.
+We will then save the ```DATA``` periodically. This can be done really whenever, but I decided a good time to save the data frame is after every 1000 scrapes.
 
 Thus we can modify the ```main_loop()``` like this:
 
@@ -488,14 +489,15 @@ def main_loop(self):
             #Store the data in the RAM
             #Save it to a file when it is the last index
             #i.e. save it to a file when we are done scraping each officer's citations
-
             scraped_data = self.get_data()
-
-            if not scraped_data.empty:
-                save_data(scraped_data, save = j == len(self.index)-1)
+            if not scraped_data.empty:                      
+                #Save to a file every 1000 rows scraped, or if it's the last index
+                to_file = (j == len(self.index)-1) or j % 1000 == 0
+                save_data(scraped_data, save = to_file)
             else:
                 print("No data")
 
+            #Display to the console the most recent data scraped
             print("Most recent data scraped:")
             print(DATA.tail(5))
 
@@ -520,14 +522,15 @@ def measure_time(start_time, s, threshold=10.1):
         if current >= threshold:
             counting = False
             s.flag = True
+            s.go()
         time.sleep(0.1)
 ```
 
-This function starts counting until 10 once it is called. If the thread is not stopped before the 10 seconds is up, then it will signal back to the scraper object (argument ```s```--that's the benefit of OOP, that we can refer back to the same object even when it's passed through a function) that the scraper failed to query up data (or no data) within an adequate period of time (10 seconds in our case)
+This function starts counting until 10 once it is called. If the thread is not stopped before the 10 seconds is up, then it will signal back to the scraper object (argument ```s```--that's the benefit of OOP, that we can refer back to the same object even when it's passed through a function) that the scraper failed to query up data (or no data) within an adequate period of time (10 seconds in our case). I reload the page with ```s.go()``` to prevent the driver from freezing up.
 
 NOTE: ```time.sleep(0.1)``` is there to conserve computer resources; the timer will only update every 100 ms.
 
-I refer to some properties of ```Scraper()``` in ```measure_time``` that I haven't quite yet define, so let's do that:
+I refer to some properties of ```Scraper()``` in ```measure_time``` that I haven't quite yet defined, so let's do that:
 
 ```
 class Scraper():
@@ -563,16 +566,34 @@ def flag(self, change):
 
 Thus, if ```measure time``` triggers the ```flag``` property of the scraper, we need the while loop to stop. 
 
-We can easily modify the ```get_data()``` method by including ```self.flag``` as a conditional in the while loop:
+#### Implementing the Thread in our Scraping Methods
+
+We can easily modify the ```get_data()``` method by including ```self.flag``` as a conditional in the while loop.
+
+Now that the structure and logic of ```measure_time``` is established in ```Scraper()```, we need to actually create the thread in our scraping methods.
+
+First, we modify the ```get_data()``` method. Essentially, we start the asynchronous timer before any "problematic" code chunks start--i.e. before the while loop prohibits the Selenium driver from freezing up. If the scrape is successful, we can ```join()``` (stop) the thread before the timer is up and proceed with the scraping.
 
 ```
 def get_data(self):
+    #Time how long it takes to scrape each citation
+    start_time = time.perf_counter()
+    self._citation_loaded = False
+
+    # Create and start the thread for measuring time
+    time_thread = threading.Thread(target=measure_time, args=(start_time,self))
+    time_thread.start()
+
     citation_data = driver.find_elements(By.CSS_SELECTOR, ".v-card__text .col")
     no_data_text = driver.find_elements(By.CSS_SELECTOR, ".v-card__text .text-center h4")
     while not self.flag and len(citation_data) < 1 and len(no_data_text) < 1:
         citation_data = driver.find_elements(By.CSS_SELECTOR, ".v-card__text .col")
         no_data_text = driver.find_elements(By.CSS_SELECTOR, ".v-card__text .text-center h4")
         time.sleep(0.1)
+
+    self._citation_loaded = True
+    #Join the current thread
+    time_thread.join()
     
     if len(no_data_text) >= 1:
         return pd.DataFrame()
@@ -585,9 +606,49 @@ def get_data(self):
         return pd.concat([self.format_text([el.text for el in citation_data]), additionalInfo], axis=1)
 ```
 
-#### Implementing the Thread in the Main Loop
+**Best Practice**: Over large iterations with Selenium (as we are doing here), Selenium has a tendency to freeze up in response to the lag time between the actions from the script and the responses from the server. As a result, it's best to prevent these freezes by implementing these threads over every scraping method--areas where Selenium is susceptible to these lags/timeout errors.
 
-Now that the structure and logic of ```measure_time``` is established in ```Scraper()```, we need to actually create the thread in our ```main_loop```:
+Thus, we will also implement our ```measure_time()``` thread over our ```send_keys()``` method (since it interacts directly with Selenium).
+
+Here's how we can modify the function (similar to how we implemented the thread with ```get_data()```).
+
+```
+def send_keys(self, data={"officer": 1, "index": 0}):
+    self._citation_loaded = False
+    index = "0"*(5-len(str(data["index"])))+str(data["index"])
+    key = f"P{data['officer']}-{index}"
+    #print(key)
+    
+    #Time how long it takes to load each citation
+    start_time = time.perf_counter()
+
+    # Create and start the thread for measuring time
+    time_thread = threading.Thread(target=measure_time, args=(start_time,self))
+    time_thread.start()
+    
+    WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, ".v-text-field__slot input"))
+    )
+    input_field = driver.find_elements(By.CSS_SELECTOR, ".v-text-field__slot input")[0]
+    driver.execute_script("arguments[0].value = '';", input_field)
+    input_field.send_keys(key)
+    
+    #Search the citation
+    WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, ".v-input__append-inner button"))
+    )
+    search_btn = driver.find_elements(By.CSS_SELECTOR, ".v-input__append-inner button")[0]
+    search_btn.click()
+
+    self._citation_loaded = True
+    time_thread.join()
+```
+
+This is essentially the same code as before but we are surrounding the code that interacts with the driver with our thread implementation (same as in ```get_data()```). We also need to change it into a dynamic function by adding ```self``` to the function parameters so we can set ```self._citation_loaded = False``` at the beginning of the method and ```True``` once the keys have been sent.
+
+#### Modifying the ```main_loop()```
+
+We also need to update the ```main_loop``` to retry the citation in the case that one of our scraping methods ended in an error or caused our thread to time out:
 
 ```
 def main_loop(self):
@@ -596,39 +657,37 @@ def main_loop(self):
     for i in self.officers:
         j = 0
         while j < len(self.index):
-            self._citation_loaded = False
-
-            #Time how long it takes to scrape each citation
-            start_time = time.perf_counter()
-
-            # Create and start the thread for measuring time
-            time_thread = threading.Thread(target=measure_time, args=(start_time,self))
-            time_thread.start()
-
-            self.send_keys({"officer": i, "index": j})
-            
-            #Store the data in the RAM
-            #Save it to a file when it is the last index
-            #i.e. save it to a file when we are done scraping each officer's citations
-            scraped_data = self.get_data()
-            if not scraped_data.empty:
-                save_data(scraped_data, save = j == len(self.index)-1)
-            else:
-                print("No data")
-            self._citation_loaded = True
-
-            #Join the current thread
-            time_thread.join()
-            print(f"Execution time: {time.perf_counter()-start_time:.6f}\n")
-
-            print("Most recent data scraped:")
-            print(DATA.tail(5))
-
             #Reset the flag:
+            if self._flag == True:
+                self._flag = False
+                self.go()
+                self.find_citation()
+
+            try:
+                self.send_keys({"officer": i, "index": j})
+                
+                #Store the data in the RAM
+                #Save it to a file when it is the last index
+                #i.e. save it to a file when we are done scraping each officer's citations
+                scraped_data = self.get_data()
+                if not scraped_data.empty:                      
+                    #Save to a file every 1000 rows scraped, or if it's the last index
+                    to_file = (j == len(self.index)-1) or j % 1000 == 0
+                    save_data(scraped_data, save = to_file)
+                else:
+                    print("No data")
+            except Exception as e:
+                now = datetime.datetime.now()
+                index = "0"*(5-len(str(j)))+str(j)
+                key = f"P{i}-{index}"
+                error_message = f"{now}: {str(e)};\nThere was an error sending the keys or scraping the data: {key}"
+                with open("errors.txt", "a") as f:
+                    f.write(error_message + "\n\n")
+                self._flag = True
+
             if self._flag:
                 #This property can only be set true by the measure_time thread
                 j -= 1
-                self._flag = False
 
             #Generally increase the jth index after each iteration
             j += 1
@@ -637,38 +696,9 @@ def main_loop(self):
 ```
 
 Here's the updates that occurred:
-1. ```self._citation_loaded = False``` resets the initial condition of ```citation.loaded``` that's referenced in ```measure_time```. We are communicating that at the start of each iteration that the citation is presumed to not be loaded.
-2. We created a ```threading``` object named ```time_thread``` that runs ```measure_time```. It takes the current time as the starting time argument.
-3. ```time_thread.start()``` starts running the 10 second timer as defined in ```measure_time```
-4. The thread is joined (stopped) only after the data has been attempted to be scraped. If the timer reaches 10 seconds before the data is scraped, then ```flag``` will be set to true, the while loop will finish and the iteration will proceed to finish as well.
-5. If ```flag``` is true (meaning that the timer finished before the data could load or be scraped), we need to first and foremost reset the ```flag``` property to false so it can be ready for the next iteration, but then secondly, we can repeat the citation number again to get another attempt at scraping the data.
-
-While this script will run and work well for generally all cases, we can add one more error-catching statement that will ensure we get all citations that aren't able to be loaded:
-
-Adding a ```try-except``` statement to the code above, we have:
-```
-try:
-    self.send_keys({"officer": i, "index": j})
-    
-    #Store the data in the RAM
-    #Save it to a file when it is the last index
-    #i.e. save it to a file when we are done scraping each officer's citations
-    scraped_data = self.get_data()
-    if not scraped_data.empty:
-        save_data(scraped_data, save = j == len(self.index)-1)
-    else:
-        print("No data")
-    self._citation_loaded = True
-except Exception as e:
-    now = datetime.datetime.now()
-    index = "0"*(5-len(str(j)))+str(j)
-    key = f"P{i}-{index}"
-    error_message = f"{now}: {str(e)};\nThere was an error sending the keys or scraping the data: {key}"
-    with open("errors.txt", "a") as f:
-        f.write(error_message + "\n\n")
-```
-
-This will log any citation that is not captured and handled by the ```measure_time``` thread to a text file and then just proceed with the rest of the program. After the program is done scraping, we can come back and look specifically at what citations failed to scrape in the ```errors.txt``` file. If it's neglible, we might not need to run the scraper for those citations left on the margin.
+1. If ```flag``` is true (meaning that the timer finished before the data could load or be scraped), we need to first and foremost reset the ```flag``` property to false so it can be ready for the next iteration, but then secondly, we can repeat the citation number again to get another attempt at scraping the data.
+2. Put some error catching around our scraping methods. In case anything goes wrong--perhaps something that we didn't intend in the driver or a timeout exception--we can log that to the errors.txt file and try again and see exactly where the error occurred.
+3. If the flag is true, go back to the previous citation and try again. 
 
 ## Conclusion
 
@@ -710,3 +740,7 @@ Within the ```main_loop```:
 if j % 10 == 0:
     self.calculateTime()
 ```
+
+The current version of my scraper on GitHub also has methodology to start at a specific citation in the database. This involves changing the outisde for loop in the ```main_loop``` to a while loop.
+
+I also have support that ends scraping the current "Officer" # if the scraper runs into 50 consecutive citations with no data and the previous citation scraped was within a month of being issued--this prevents the scraper going to 99999 for every ith iteration.

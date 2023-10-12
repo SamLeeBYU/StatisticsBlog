@@ -17,6 +17,7 @@ Feel free to connect with Sam on Github and Linkedin, leave your thoughts on his
 | ----------- |----------- |----------- |----------- |
 | Income Limits | Researcher | https://github.com/SamLeeBYU/IncomeLimits |  |
 | Traffic Citations         | Researcher| https://github.com/SamLeeBYU/TrafficCitations|  |
+| BYU Parking Allocation         | Researcher| https://github.com/SamLeeBYU/BYUTrafficCitations|  |
 | Wage Growth (EDA)         | Creator | https://github.com/SamLeeBYU/WageGrowth/blob/main/WagesInProvo.R|  |
 | 2022 Miderms and the Impact of Independent Voters (EDA) | Creator   | https://github.com/SamLeeBYU/SamLeeBYU.github.io/tree/main/Midterms2022 | https://samleebyu.github.io/Midterms2022/MultimodalProject.html |
 | Stylometric Analysis of the Four Gospels (EDA) | Creator    | https://samleebyu.github.io/CloserToChrist/CloserToChrist.pdf  | https://github.com/SamLeeBYU/SamLeeBYU.github.io/tree/main/CloserToChrist |
