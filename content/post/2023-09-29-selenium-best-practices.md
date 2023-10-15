@@ -13,15 +13,15 @@ tags:
 URL: "/2023/09/29/selenium-best-practices/"    
 ---
 
-## Introduction (For Those New to Selenium)
+## Introduction
 
-Throughout my research experience, I have been often charged with scraping large data sets that only exist as embedded through a government portal or as partially accessible through passing through or entering form information. Through BeautifulSoup (which is a great library for sifting through the HTML text itself), and the requests library, static sites (such as Wikipedia) can be scraped quite easily, but the former examples present more of a challenge. In fact, most of the time we want data that is protected through dynamic integration.
+<!-- Throughout my research experience, I have been often charged with scraping large data sets that only exist as embedded through a government portal or as partially accessible through passing through or entering form information. Through BeautifulSoup (which is a great library for sifting through the HTML text itself), and the requests library, static sites (such as Wikipedia) can be scraped quite easily, but the former examples present more of a challenge. In fact, most of the time we want data that is protected through dynamic integration.
 
 Most websites load their data dynamically. This means that after the user sends a requests to the server and the page responds by sending the initial HTML, CSS, and JS to the browser, after a series of callbacks, the server will then load in the data that's stored through JSON files (or elsewhere on the server) once the server has established that the user is actually present on the page. Sometimes this manifests itself through form elements. Every time you enter a query in a search bar on website looking for some data that they have (we will look at an example here in a moment), most of the time they didn't load that data in all at once when you sent your first request (i.e. first loaded the site), otherwise, the website would probably take a lot longer to load. As a result, they load the data in dynamically; this means that they will often only give you the data that you need in the moment you need it, not all at once.
 
 Static webscraping is an all-at-once approach. It assumes all the data has been loaded with the first request. This is often not the case. Those who have tried scraping a dynamically integrated websites might know what I mean. They can visibily see the data on the webpage when they're viewing it as a normal user, but when they try to load in the respective HTML, the data they expect to be there isn't! Often they are left with empty HTML skeleton.
 
-Selenium provides us with the solution. Selenium artifically creates a "user", it can automate user actions, thus sending actual requests to the server, and force the server to send back the data we want. From there we can load in the HTML data and parse it using BeautifulSoup or however we want.
+Selenium provides us with the solution. Selenium artifically creates a "user", it can automate user actions, thus sending actual requests to the server, and force the server to send back the data we want. From there we can load in the HTML data and parse it using BeautifulSoup or however we want. -->
 
 In this tutorial I will walk through the code used for a basic model that I used to scrape through the traffic citations database stored on the BYU server.
 
@@ -744,3 +744,17 @@ if j % 10 == 0:
 The current version of my scraper on GitHub also has methodology to start at a specific citation in the database. This involves changing the outisde for loop in the ```main_loop``` to a while loop.
 
 I also have support that ends scraping the current "Officer" # if the scraper runs into 50 consecutive citations with no data and the previous citation scraped was within a month of being issued--this prevents the scraper going to 99999 for every ith iteration.
+
+## Additional Resources
+
+A multi-part tutorial that I have watched and would recommend:
+
+* [https://www.youtube.com/watch?v=Xjv1sY630Uc&t=485s](https://www.youtube.com/watch?v=Xjv1sY630Uc&t=485s)
+
+A more wholistic approach and walkthrough to Selenium:
+
+* [https://www.youtube.com/watch?v=UOsRrxMKJYk](https://www.youtube.com/watch?v=UOsRrxMKJYk)
+
+The documentation for Selenium, specifically for locating elements in the DOM which I didn't go over in depth:
+
+* [https://selenium-python.readthedocs.io/locating-elements.html](https://selenium-python.readthedocs.io/locating-elements.html)
