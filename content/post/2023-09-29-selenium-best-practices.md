@@ -27,7 +27,7 @@ In this tutorial I will walk through the code used for a basic model that I used
 
 (Though the example is particularly directed towards BYU students, the structure and syntax of the example can be applied anywhere)
 
-All code is posted in this on my Github [here](https://github.com/SamLeeBYU/BYUTrafficCitations).
+All code in this tutorial is posted on my Github [here](https://github.com/SamLeeBYU/BYUTrafficCitations).
 
 Through my experiences of trial and error and much headache of not being able to figure out why my code isn't working, and by watching countless tutorials myself, I want to make this tutorial to demonstrate the best way I found to go about scraping data. Though there is never one correct way to solve a problem, I believe there are more efficient ways. In this tutorial I will demonstrate the pitfalls to avoid and the reasons I have structured my code the way I have.
 
