@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "University Traffic Fines vs. Trends in Weather & Air Quality - Data Collection"
+title:      "University Traffic Fines: Trends in Weather & Air Quality - Data Collection"
 description: "An exploratory data science project to research how changes in weather and air quality affect the incentives of both students and university parking police"
 date:    2023-11-13
 author:     Sam Lee
@@ -13,23 +13,13 @@ tags:
 URL: "/2023/11/13/byu-traffic-citations/"    
 ---
 
-## Introduction
-
-Both private and public universities across the United Sates typically have university-specific parking service to enforce university parking regulations due to limited parking space supply. For the purposes of this analysis, we will analyze traffic citation data specific to my university, Brigham Young University.
-
-The purpose behind this analysis will be to see if we can trace out any signal behind the relationship of number of traffic citations given on a particular day and effects in weather and air quality. We hypothesize that when adjusted for confounding effects such as changes in enrollment, seasonality, type of day (whether the day is a holiday), day of week, and trends in time, we can isolate the effect of all influential factors that affect trends in traffic citations given at BYU.
-
-We hypothesize that changes in weather patterns change the incentives of students' choices in transportation choice *as well as* incentives for BYU's parking enforcement task force. We make the assumption that incentives for students' choices in transportation are more inelastic in regards to changes in weather as opposed to incentives for BYU's parking enforcement task force.
-
-If this theory holds then through regression analysis, we hope to show that increase in negative weather effects will significantly decrease the amount of traffic citations distributed on a particular day. 
-
-If incentives for students' choices in transportation are indeed more inelastic than the incentives for parking police at BYU with respect to changes in weather and air quality, then this provides convincing evidence that as trends in weather and air quality become more severe, weather factors become a greater indicator of changes in parking demand than parking citations.
-
 All code and progress for this project is kept up to date at [https://github.com/SamLeeBYU/BYUTrafficCitations](https://github.com/SamLeeBYU/BYUTrafficCitations).
 
-## Problem and Motivation
+## Introduction
 
 The idea for this project sparked when I received yet another parking citation from BYU during the spring semester of 2023. It wasn't until I went to pay the citation where I realized BYU's citation database [1] was scrapable. Though BYU hides certain citation-specific details for privacy purposes, the general information of every citation scraped is available for anyone with BYU credentials: Notable information such as the time of a citation, plate/vin number, and fine amount could all be parsed by iterating through a combination of citation numbers. Through a process which I explain thoroughly [here](https://samleebyu.github.io/2023/09/29/selenium-best-practices/), I scraped the traffic citations going back to July 2012 to present (October 2023 at the time of scraping).
+
+## Problem and Motivation
 
 Upon looking at the aggregate daily trends in the number of daily fines over time, I realized that there seemed to be explainable trends in the data--it was more than just a random walk. Surely the number of students who are obligated to go to campus on any given day of the week influenced the large fluctuations in number of tickets given out--things like enrollment, whether the day was a holiday or if was a day during final exams, what day of the week it was, or just the general trend in enrollment over time--could explain the long-run fluctuations. However, I wanted to know if the short-run fluctuations could be explained. I wanted to know if changes from day to day or week to week depended on the incentives of students' transportation choices in the midst of weather and air quality effects. On the contrary, were the small fluctuations I was seeing from day to day and week to week just simply due to random error? 
 
