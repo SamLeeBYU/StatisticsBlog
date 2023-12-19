@@ -82,12 +82,7 @@ The housing prices data. (See [A.1](#a1) for the selection process for
 the number of lag variables).
 
 Merging the housing prices data set with the mortality data set yields
-the final data set for the econometric analysis: The response variable
-$\text{HPI}_{2021}$ will be measured on the independent metric of
-interest, $\text{Mortality Rate}$ for each county, and this will be
-controlled for using a series of state dummy variables and the $6$ lag
-variables on $\text{HPI}_{2021}$. This data set yielded a sample size =
-3113 counties with $n = 50$ states.
+the final data set for the econometric analysis: The response variable $\text{HPI}_{2021}$ will be measured on the independent metric of interest, $\text{Mortality Rate}$ for each county, and this will be controlled for using a series of state dummy variables and the $6$ lag variables on $\text{HPI}_{2021}$. This data set yielded a sample size = 3113 counties with $n = 50$ states.
 
 #### Exploratory Data Analysis
 
@@ -152,7 +147,7 @@ variables are excluded from the model.
 Hence, for year $t$, state $s$, and county $c$, we wish to estimate for
 $n$ \# of states,
 
-1)  $\text{HPI}_{sct} = \beta_0+\beta_1\text{Mortality}_{sct-1}+\sum_{j=1}^{n-1}\beta_{j+1}I(\text{State}_s=j)+\sum_{p=1}^{6}\delta_{p}\text{HPI}_{sct-p}+\eta_{sct}$
+1) $\text{HPI}_{sct} = \beta_0+\beta_1\text{Mortality}_{sct-1}+\sum_{j=1}^{n-1}\beta_{j+1}I(\text{State}_s=j)+\sum_{p=1}^{6}\delta_{p}\text{HPI}_{sct-p}+\eta_{sct}$
 
 Where $\beta_1$ is the parameter of interest. Since we are only
 interested in the effect that 2020 COVID-19 mortality had on 2021

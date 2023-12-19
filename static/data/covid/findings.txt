@@ -1,2 +1,0 @@
-"Coefficient" "Estimate" "Std. Error" "T.Value" "P.Value" "2.5 %" "97.5 %"
-"1" "Mortality Rate" -0.0031 0.00061054 -5.07407 "0.00000041" -0.0043 -0.0019

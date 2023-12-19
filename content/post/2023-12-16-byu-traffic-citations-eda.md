@@ -37,9 +37,8 @@ Through exploratory data analysis we hope to answer the following questions with
 - [Does the daily number of traffic fines depend on the day of the week?](#a)
 - [Can we dispel or prove the common rumor that parking police have "quotas"?](#b)
 - [How does AQI affect changes in the daily number of fines?](#c)
-- [Is there any strong multicollinearity between any of the weather factors](#d)
+- [Is there any strong multicollinearity between any of the weather factors?](#d)
 - [Can we predict the daily number of fines over a certain span of time?](#e)
-  - [If so, which environmental factor affects the daily number of fines the most?](#i)
 
 Explore the documented EDA process in [EDA.ipynb](https://github.com/SamLeeBYU/BYUTrafficCitations/blob/main/EDA.ipynb).
 
@@ -55,7 +54,7 @@ What's more interesting is when we look at the lag plot for the daily number of 
 
 ![](/img/byu-traffic-citations/lags.png)
 
-A lag variable is just the response variable but from the past. A pth lag is $Y_\{t-p\}$, where p is the time interval and $Y_t$ is the response variable for each period $t$. For those who haven't seen lag variables before it might seem weird to form a regression such that $Y_t=\beta_0+\beta_pY_{t-p}+\epsilon_t$, but that's exactly what we're doing. The graph you see above is a graph of the the coefficients, $p$. We normally use lag variables when we suspect we have highly dependent data. We usually expect that as $p$ increases the coefficient $\beta_p$ shrinks to zero. In other words, the response from $p$ time periods ago becomes less of a good metric to predict the response variable right now (at time $t$).
+A lag variable is just the response variable but from the past. A pth lag is $Y_\{t-p\}$, where p is the time interval and $Y_t$ is the response variable for each period $t$. For those who haven't seen lag variables before it might seem weird to form a regression such that $Y_t=\beta_0+\beta_pY_{t-p}+\epsilon_t$, but that's exactly what we're doing. The graph you see above is a graph of the coefficients, $p$. We normally use lag variables when we suspect we have highly dependent data. We usually expect that as $p$ increases the coefficient $\beta_p$ shrinks to zero. In other words, the response from $p$ time periods ago becomes less of a good metric to predict the response variable right now (at time $t$).
 
 What we see here is really interesting in regards to this question. The coefficients peak at exactly 7, 14, 21, and 28. These are multiples of 7. This implies that the daily number of fines are dependent about the daily number of fines from one week, two weeks, three weeks ago, and four weeks ago more so than it is than, say two days ago. This may be evidence that the parking police have a weekly quota, but we will see in the next question why this is nuanced. This is most likely due to the fact that every Saturday parking demand drastically falls and parking rules become much more lax.
 
@@ -137,7 +136,7 @@ Upon closer inspection of these trends, we can examine how AQI compare against t
 
 The data are extremely noisy. It is still possible that students on the margin are influenced by weather and air quality factors, but without regression analysis, we cannot determine a specific effect for AQI.
 
-#### Is there any strong multicollinearity between any of the weather factors {#d}
+#### Is there any strong multicollinearity between any of the weather factors? {#d}
 
 As mentioned in earlier sections, there may be strong colinearity between the weather factors and air quality factors. In regression analysis this could inflate the variance of the estimators. I looked at a heatmap of the correlations between all the weather and environmental factors.
 
@@ -151,7 +150,7 @@ Upon looking further into the relationship of $O_3$ and temperature, it appears 
 
 ![](/img/byu-traffic-citations/o3-temp.png)
 
-#### Can we predict the daily number of fines over a certain span of time? {#3}
+#### Can we predict the daily number of fines over a certain span of time? {#e}
 
 We are finally ready to use our data set to make inferential predictions about the daily number of fines with the goal being to isolate the effect of signal of the environmental factors. I will cover the statistical details in a future blog post, but I created three models: A multilinear regression model with weekly lags (weekly lags corresponding to $DailyNumFines_{t-1}$, $DailyNumFines_{t-7}$, $DailyNumFines_{t-14}$, $DailyNumFines_{t-21}$, $DailyNumFines_{t-28}$), a first differences model, and a random forest model for prediction. For the purposes of modeling, I modeled the log number of daily number of fines.
 
@@ -185,14 +184,14 @@ In this exploratory data analysis project we sought out signal in a noisy data s
 
 ## Data Sources
 
-[1] University traffic citations data come from BYU's citations server: [https://cars.byu.edu/citations](https://cars.byu.edu/citations). Data obtained through web scraping techniques which I explain [here](https://samleebyu.github.io/2023/09/29/selenium-best-practices/). Raw data can be viewed [here](https://github.com/SamLeeBYU/BYUTrafficCitations/blob/main/ParkingCitationsEncrypted.csv), though license plate/vin numbers have been encrypted so the data set cannot be easily merged with other data sets containing these license plate/vin numbers.
+###### [1] University traffic citations data come from BYU's citations server: [https://cars.byu.edu/citations](https://cars.byu.edu/citations). Data obtained through web scraping techniques which I explain [here](https://samleebyu.github.io/2023/09/29/selenium-best-practices/). Raw data can be viewed [here](https://github.com/SamLeeBYU/BYUTrafficCitations/blob/main/ParkingCitationsEncrypted.csv), though license plate/vin numbers have been encrypted so the data set cannot be easily merged with other data sets containing these license plate/vin numbers. {#1 .data-source}
 
-[2] Local and historical weather data for Provo, UT were obtained through the climate API, [Open-Meteo](https://open-meteo.com/en/docs/climate-api).
+###### [2] Local and historical weather data for Provo, UT were obtained through the climate API, [Open-Meteo](https://open-meteo.com/en/docs/climate-api). {#2 .data-source}
 
-[3] Local historical air quality data containing measurements for $CO$, $NO_2$, $O_3$, $PM 10$, and $PM 2.5$ were obtained through parsing through data on the Utah Department of Environmental Quality's [website](https://air.utah.gov/dataarchive/archall.htm). Missing data were corrected by substituting the missing values for the average of the given metric for the corresponding month aggregated overall all the data (years 2014-2022, April-August of 2020 excluded).
+###### [3] Local historical air quality data containing measurements for $CO$, $NO_2$, $O_3$, $PM 10$, and $PM 2.5$ were obtained through parsing through data on the Utah Department of Environmental Quality's [website](https://air.utah.gov/dataarchive/archall.htm). Missing data were corrected by substituting the missing values for the average of the given metric for the corresponding month aggregated overall all the data (years 2014-2022, April-August of 2020 excluded). {#3 .data-source}
 
-[4] Air quality pollutant specific sub-category metrics are determined by the U.S. Environmental Protection Agency Office of Air Quality Planning and Standards Air Quality Assessment Division. See [here](https://airnowtomed.app.cloud.gov/sites/default/files/2020-05/aqi-technical-assistance-document-sept2018.pdf) (pages 4 and 5). Appropriate AQI was also calculated using EPA's documentation found here.
+###### [4] Air quality pollutant specific sub-category metrics are determined by the U.S. Environmental Protection Agency Office of Air Quality Planning and Standards Air Quality Assessment Division. See [here](https://airnowtomed.app.cloud.gov/sites/default/files/2020-05/aqi-technical-assistance-document-sept2018.pdf) (pages 4 and 5). Appropriate AQI was also calculated using EPA's documentation found here {#4 .data-source}
 
-[5] Past enrollment data of BYU for the past ten years was obtained curtesy of [BYU Research & Reporting Enrollment Services](https://tableau.byu.edu/#/site/BYUCommunity/views/UniversityEnrollmentStatistics/EnrollmentStatistics).
+###### [5] Past enrollment data of BYU for the past ten years was obtained curtesy of [BYU Research & Reporting Enrollment Services](https://tableau.byu.edu/#/site/BYUCommunity/views/UniversityEnrollmentStatistics/EnrollmentStatistics). {#5 .data-source}
 
-[6] BYU academic archive data were found courtesy of the HBLL. Records were used to link up when classes started and ended for each semester. Archives can be found [here](https://lib.byu.edu/collections/byu-history/).
+###### [6] BYU academic archive data were found courtesy of the HBLL. Records were used to link up when classes started and ended for each semester. Archives can be found [here](https://lib.byu.edu/collections/byu-history/). {#6 .data-source}
