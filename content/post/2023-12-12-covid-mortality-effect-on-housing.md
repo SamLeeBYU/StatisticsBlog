@@ -82,7 +82,7 @@ The housing prices data. (See [A.1](#a1) for the selection process for
 the number of lag variables).
 
 Merging the housing prices data set with the mortality data set yields
-the final data set for the econometric analysis: The response variable $\text{HPI}_{2021}$ will be measured on the independent metric of interest, $\text{Mortality Rate}$ for each county, and this will be controlled for using a series of state dummy variables and the $6$ lag variables on $\text{HPI}_{2021}$. This data set yielded a sample size = 3113 counties with $n = 50$ states.
+the final data set for the econometric analysis: The response variable $\text{HPI}\_{2021}$ will be measured on the independent metric of interest, $\text{Mortality Rate}$ for each county, and this will be controlled for using a series of state dummy variables and the $6$ lag variables on $\text{HPI}\_{2021}$. This data set yielded a sample size = 3113 counties with $n = 50$ states.
 
 #### Exploratory Data Analysis
 
@@ -110,21 +110,15 @@ mortality rate and $\text{HPI}_{2021}$.
 
 ![](/img/covid/memo_files/figure-commonmark/unnamed-chunk-4-1.png)
 
-This demonstrates the variability between states’ $\text{HPI}_{2021}$
-and COVID-19 mortality rates. The fact that the proportion of
-$\text{HPI}_{2021}$ and mortality rate varies drastically depending on
-state indicates that both mortality and $\text{HPI}_{2021}$ may depend
-on the state and state-specific policies. In econometric terms, we need
-to include state-specific fixed effects in our econometric model in
-order to further satisfy $E[\epsilon|X]=0$
+This demonstrates the variability between states’ $\text{HPI}\_{2021}$ and COVID-19 mortality rates. The fact that the proportion of $\text{HPI}\_{2021}$ and mortality rate varies drastically depending on
+state indicates that both mortality and $\text{HPI}_{2021}$ may depend on the state and state-specific policies. In econometric terms, we need to include state-specific fixed effects in our econometric model in order to further satisfy $E[\epsilon|X]=0$
 
 ## Econometric Model
 
 It is hypothesized that there are unobserved effects in the data that
 are dependent upon each state ($s$) such that for each county ($c$) that
 we wish to estimate the COVID-19 mortality effect on per-county housing
-prices in 2021 ($\text{HPI}_{2021}$), the error term ($\epsilon$) can
-thus be represented by $\epsilon_{sc}=\alpha_s+\eta_{st}$. We will
+prices in 2021 ($\text{HPI}\_{2021}$), the error term ($\epsilon$) can thus be represented by $\epsilon\_{sc}=\alpha\_s+\eta\_{st}$. We will
 remedy this issue by using a fixed effects model by including $n-1$
 dummy variables for $n$ states.
 
@@ -137,19 +131,20 @@ nature of time-series dependent data. Excluding the lags from model will
 likely lead to a biased coefficient on the estimated effect for
 mortality, as it would have encapsulated the effects of the lagged
 variables in $\eta_{sc}$ which would have otherwise been controlled for
-in the model. Since $\text{HPI}_{2021}$ is significantly dependent upon
-$\text{HPI}_{2021-1},...,\text{HPI}_{2021-P}$ (as shown in [A.1](#a1)),
+in the model Since $\text{HPI}\_{2021}$ is significantly dependent upon $\text{HPI}\_{2021-1},...,\text{HPI}\_{2021-P}$ (as shown in [A.1](#a1)),
 where $P$ is the number of lags in the model (in this analysis we let
-$P=6$), then since $\delta_p > 0 \quad \forall p \in \{1,...,P\}$, then
+$P=6$), then since $\delta\_p > 0 \quad \forall p \in \{1,...,P\}$, then
 the coefficient for mortality will be **overestimated** *if* the lag
 variables are excluded from the model.
 
 Hence, for year $t$, state $s$, and county $c$, we wish to estimate for
 $n$ \# of states,
 
-1) $\text{HPI}_{sct} = \beta_0+\beta_1\text{Mortality}_{sct-1}+\sum_{j=1}^{n-1}\beta_{j+1}I(\text{State}_s=j)+\sum_{p=1}^{6}\delta_{p}\text{HPI}_{sct-p}+\eta_{sct}$
+1) $\text{HPI}\_{sct} = \beta\_0+\beta\_1 + \text{Mortality}\_{sct-1} + \sum\_{j=1}^{n-1} + \beta\_{j+1}I(\text{State}\_s=j) +$ 
 
-Where $\beta_1$ is the parameter of interest. Since we are only
+    $\sum\_{p=1}^{6}\delta\_{p} + \text{HPI}\_{sct-p} + \eta\_{sct}$
+
+Where $\beta\_1$ is the parameter of interest. Since we are only
 interested in the effect that 2020 COVID-19 mortality had on 2021
 per-county housing prices, setting $t=2021$ yields a regression on a
 cross-sectional data set
@@ -157,15 +152,14 @@ cross-sectional data set
 Since we include only $n-1$ dummy variables for $n$ \# of states, $X'X$
 will be full rank and thus invertible. Since we control for state
 effects using a fixed effects model we further satisfy the assumption
-that $E[\eta_{sc}|X]=0$. This assumption is more reasonably satisfied
-with the inclusion of lagged effects on $\text{HPI}_{sct=2021}$. Since
-these lagged effects significantly affect the main response,
-$\text{HPI}_{sct=2021}$, including them in the model will isolate the
-estimated causal effect for $\beta_1$.
+that $E[\eta\_{sc}|X]=0$. This assumption is more reasonably satisfied
+with the inclusion of lagged effects on $\text{HPI\}_{sct=2021}$. Since these lagged effects significantly affect the main response,
+$\text{HPI}\_{sct=2021}$, including them in the model will isolate the
+estimated causal effect for $\beta\_1$.
 
 ## Findings
 
-Using OLS to estimate $\beta_1$, we arrived at the following estimate
+Using OLS to estimate $\beta\_1$, we arrived at the following estimate
 (see [A.2](#a2) for full model output):
 
 | Coefficient    | Estimate | Std. Error |  T.Value | P.Value    |   2.5 % |  97.5 % |
@@ -175,7 +169,7 @@ Using OLS to estimate $\beta_1$, we arrived at the following estimate
 Adjusted $R^2$ = 0.9936818
 
 Controlling for the a state-fixed effects and lagged effects on
-$\text{HPI}_{sct=2021}$, the estimate for $\beta_1$ was found to be
+$\text{HPI}\_{sct=2021}$, the estimate for $\beta_1$ was found to be
 highly significant and negative.
 
 Holding all else constant, an additional COVID-19 mortality per 1,000
@@ -224,9 +218,8 @@ in population.
 #### A.1
 
 I determined a sufficient \# of lags ($P$) for the lagged effects on
-$\text{HPI}_{sct=2021}$ by regressing $\text{HPI}_{sct=2021}$ on
-$\text{HPI}_{sct-1},...,\text{HPI}_{sct-P}$ until the last the
-regression coefficient, $\delta_{P}$, was no longer significant for a
+$\text{HPI}\_{sct=2021}$ by regressing $\text{HPI}\_{sct=2021}$ on $\text{HPI}\_{sct-1},...,\text{HPI}\_{sct-P}$ until the last the
+regression coefficient, $\delta\_{P}$, was no longer significant for a
 chosen level of significance, $\alpha$. Let $\alpha=0.1$
 
 ![](/img/covid/memo_files/figure-commonmark/unnamed-chunk-6-1.png)
@@ -240,7 +233,7 @@ file](https://github.com/SamLeeBYU/CovidMortality/blob/main/Log/analysis_log.txt
 
 | Coefficient          | Estimate | Std. Error |   T.Value | P.Value    |    2.5 % |   97.5 % |
 |:---------------------|---------:|-----------:|----------:|:-----------|---------:|---------:|
-| (Intercept)          |  9.08027 |  0.6515312 |  13.93682 | 0.00000000 |  7.80279 | 10.35776 |
+| $\beta_0$          |  9.08027 |  0.6515312 |  13.93682 | 0.00000000 |  7.80279 | 10.35776 |
 | Mortality Rate       | -0.00310 |  0.0006105 |  -5.07407 | 0.00000041 | -0.00430 | -0.00190 |
 | HPI 2015             | -0.35359 |  0.0229598 | -15.40042 | 0.00000000 | -0.39861 | -0.30857 |
 | HPI 2016             | -0.02682 |  0.0452753 |  -0.59248 | 0.55357000 | -0.11560 |  0.06195 |
