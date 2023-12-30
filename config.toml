@@ -13,7 +13,7 @@ hasCJKLanguage = true
 home = ["HTML", "RSS", "Algolia"]
 
 [params]
-  header_image = "img/anyang_flowers.jpg"
+  header_image = "img/anyang_flowers_filtered.jpg"
   SEOTitle = "Sam Lee | Everyday Statistics"
   description = "Sam Lee, Statistician, Dreamer, Optimist | I blog about statistics and data science to help you comprehend the world better."
   keyword = "Sam Lee, BYU, Sam Lee Statistics, Blog, Personal Website, Bayesian, Econometrics, R, Python, Data Science"
